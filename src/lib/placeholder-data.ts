@@ -2,8 +2,7 @@
 
 import type { Player, User, Post, PostComment, Notification, PlayerProfileField, UserRole, Club, Team, Match, TrainingSession, TrainingAttendanceRecord, PlayerCallUp, MatchCallSheetItem, MatchDayPlayerStatus, TrainingTask, TrainingTaskCategory, LeagueCompetition, RivalTeam, PlayerEvaluation, InjuryRecord, InjuryStatus } from '@/types';
 import { Users, BarChart3, CalendarDays, ShieldCheck } from 'lucide-react';
-import { Timestamp, doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore'; // Import Timestamp and Firestore functions
-import { db } from './firebase'; // Import db
+import { db } from './database'; // Import database service
 
 export let placeholderDataVersion = 0; 
 
@@ -56,34 +55,29 @@ export async function getActiveUserClub(userId?: string): Promise<Club | undefin
     let userClubId: string | undefined;
 
     if (userId) {
-        const userDocRef = doc(db, "users", userId);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-            const userData = userDocSnap.data() as User;
-            userClubId = userData.clubId;
+        const users = await db.select('users', { id: userId });
+        if (users.length > 0) {
+            const userData = users[0] as User;
+            userClubId = userData.club_id;
         }
     }
 
     if (userClubId) {
-        const clubDocRef = doc(db, "clubs", userClubId);
-        const clubDocSnap = await getDoc(clubDocRef);
-        if (clubDocSnap.exists()) {
-            return { id: clubDocSnap.id, ...clubDocSnap.data() } as Club;
+        const clubs = await db.select('clubs', { id: userClubId });
+        if (clubs.length > 0) {
+            return clubs[0] as Club;
         } else {
-            console.warn(`getActiveUserClub: User ${userId} has clubId ${userClubId}, but club document not found in Firestore.`);
+            console.warn(`getActiveUserClub: User ${userId} has clubId ${userClubId}, but club not found in database.`);
         }
     }
     
-    // Fallback to default club from Firestore
-    const clubsCollection = collection(db, "clubs");
-    const q = query(clubsCollection, where("isDefault", "==", true), limit(1));
-    const defaultClubSnapshot = await getDocs(q);
+    // Fallback to default club from database
+    const defaultClubs = await db.select('clubs', { is_default: true });
 
-    if (!defaultClubSnapshot.empty) {
-        const defaultClubDoc = defaultClubSnapshot.docs[0];
-        return { id: defaultClubDoc.id, ...defaultClubDoc.data() } as Club;
+    if (defaultClubs.length > 0) {
+        return defaultClubs[0] as Club;
     } else {
-        console.warn("getActiveUserClub: No default club found in Firestore. Falling back to hardcoded placeholder if available.");
+        console.warn("getActiveUserClub: No default club found in database. Falling back to hardcoded placeholder if available.");
         // Final fallback to hardcoded placeholder (less ideal)
         const hardcodedDefault = placeholderClubs.find(c => c.isDefault === true);
         if (hardcodedDefault) return hardcodedDefault;

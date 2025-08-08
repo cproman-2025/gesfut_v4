@@ -3,21 +3,21 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode, useCallback } from 'react';
-import { onAuthStateChanged, type User as FirebaseUser, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, getDoc, collection, getDocs, query, limit, writeBatch, serverTimestamp, setDoc, where } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase'; 
+import { auth, type AuthUser } from '@/lib/auth';
+import { db } from '@/lib/database';
 import type { User as FirestoreUserProfile, UserRole, AppSettings } from '@/types';
 import { mainNavItems } from '@/lib/navigation';
 
 interface AuthContextType {
-  authUser: FirebaseUser | null;
+  authUser: AuthUser | null;
   userProfile: FirestoreUserProfile | null;
   isLoading: boolean;
   permissions: AppSettings['menuPermissions'] | null;
   isPermissionsLoading: boolean;
   logout: () => Promise<void>;
   fetchUserProfile: (uid: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +35,7 @@ function applyThemes(lightTheme?: string, darkTheme?: string) {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [authUser, setAuthUser] = useState<FirebaseUser | null>(null);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [userProfile, setUserProfile] = useState<FirestoreUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [permissions, setPermissions] = useState<AppSettings['menuPermissions'] | null>(null);
@@ -45,12 +45,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchGlobalSettings = useCallback(async () => {
       setIsPermissionLoading(true);
       try {
-        const settingsDocRef = doc(db, "appSettings", "global");
-        const docSnap = await getDoc(settingsDocRef);
-        if (docSnap.exists()) {
-          const settings = docSnap.data() as AppSettings;
+        const settings = await db.select('app_settings', { id: 'global' });
+        if (settings.length > 0) {
           setPermissions(settings.menuPermissions || {});
-          setGlobalSettings(settings);
+          setGlobalSettings(settings[0]);
         } else {
             const defaultPermissions: Record<string, UserRole[]> = {};
             mainNavItems.forEach(item => {
@@ -68,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
   }, []);
 
-  const internalFetchAndSetUserProfile = useCallback(async (currentAuthUser: FirebaseUser, appSettings: AppSettings | null) => {
+  const internalFetchAndSetUserProfile = useCallback(async (currentAuthUser: AuthUser, appSettings: AppSettings | null) => {
     const uid = currentAuthUser.uid;
     const emailFromAuth = currentAuthUser.email;
 
@@ -81,53 +79,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const email = emailFromAuth.toLowerCase().trim();
     const userDocRef = doc(db, "users", uid);
 
-    try {
-        const userDocSnap = await getDoc(userDocRef);
+        const users = await db.select('users', { id: uid });
         let finalProfileData: FirestoreUserProfile | null = null;
 
-        if (userDocSnap.exists()) {
-            finalProfileData = { id: userDocSnap.id, ...userDocSnap.data() } as FirestoreUserProfile;
+        if (users.length > 0) {
+            finalProfileData = users[0] as FirestoreUserProfile;
             console.log(`AuthProvider: Profile for UID ${uid} found and loaded.`);
         } else {
             console.log(`AuthProvider: No profile for UID ${uid}. Checking for a pre-created account with email ${email}.`);
             
-            const usersByEmailQuery = query(collection(db, "users"), where("email", "==", email), limit(1));
-            const existingUserSnap = await getDocs(usersByEmailQuery);
+            const existingUsers = await db.select('users', { email });
 
-            if (!existingUserSnap.empty) {
-                const preCreatedDoc = existingUserSnap.docs[0];
-                const preCreatedData = preCreatedDoc.data();
-                console.log(`AuthProvider: Pre-created account found (Doc ID: ${preCreatedDoc.id}). Migrating data to new UID: ${uid}.`);
+            if (existingUsers.length > 0) {
+                const preCreatedData = existingUsers[0];
+                console.log(`AuthProvider: Pre-created account found. Migrating data to new UID: ${uid}.`);
 
-                const batch = writeBatch(db);
                 const newProfileData = {
                     ...preCreatedData,
+                    id: uid,
                     status: 'Active',
-                    updatedAt: serverTimestamp(),
-                    createdAt: preCreatedData.createdAt || serverTimestamp()
+                    updated_at: new Date().toISOString(),
+                    created_at: preCreatedData.created_at || new Date().toISOString()
                 };
-                batch.set(userDocRef, newProfileData);
-                batch.delete(preCreatedDoc.ref);
-                await batch.commit();
+                
+                await db.update('users', preCreatedData.id, newProfileData);
+                await db.delete('users', preCreatedData.id);
 
                 finalProfileData = { id: uid, ...newProfileData } as FirestoreUserProfile;
                 console.log(`AuthProvider: Account for ${email} successfully claimed and activated for UID ${uid}.`);
 
             } else {
                 console.log(`AuthProvider: No pre-created account found for ${email}. Creating default 'Jugador' profile.`);
-                const defaultName = currentAuthUser.displayName || email.split('@')[0];
+                const defaultName = currentAuthUser.name || email.split('@')[0];
                 
                 const newUserProfileData = {
+                    id: uid,
                     name: defaultName,
                     email: email,
                     role: 'Jugador' as UserRole,
                     status: 'Active' as 'Active',
-                    avatarUrl: currentAuthUser.photoURL || `https://placehold.co/40x40.png?text=${defaultName[0]?.toUpperCase() || 'U'}`,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
+                    avatar_url: `https://placehold.co/40x40.png?text=${defaultName[0]?.toUpperCase() || 'U'}`,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
                 };
 
-                await setDoc(userDocRef, newUserProfileData);
+                await db.insert('users', newUserProfileData);
                 finalProfileData = { id: uid, ...newUserProfileData } as FirestoreUserProfile;
                 console.log(`AuthProvider: Firestore profile for ${email} (UID: ${uid}) CREATED and SET.`);
             }
@@ -136,8 +132,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserProfile(finalProfileData);
 
         if (finalProfileData) {
-            const lightThemeToApply = finalProfileData.lightTheme || appSettings?.defaultLightTheme || 'default';
-            const darkThemeToApply = finalProfileData.darkTheme || appSettings?.defaultDarkTheme || 'dark';
+            const lightThemeToApply = finalProfileData.light_theme || appSettings?.default_light_theme || 'default';
+            const darkThemeToApply = finalProfileData.dark_theme || appSettings?.default_dark_theme || 'dark';
             
             localStorage.setItem('gesfut-light-theme', lightThemeToApply);
             localStorage.setItem('gesfut-dark-theme', darkThemeToApply);
@@ -159,15 +155,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isPermissionsLoading) return; // Wait for settings to load first
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setAuthUser(user);
       if (user) {
         await internalFetchAndSetUserProfile(user, globalSettings);
       } else {
         setUserProfile(null);
         // On logout, apply default themes from settings if they exist
-        const defaultLight = globalSettings?.defaultLightTheme || 'default';
-        const defaultDark = globalSettings?.defaultDarkTheme || 'dark';
+        const defaultLight = globalSettings?.default_light_theme || 'default';
+        const defaultDark = globalSettings?.default_dark_theme || 'dark';
         localStorage.setItem('gesfut-light-theme', defaultLight);
         localStorage.setItem('gesfut-dark-theme', defaultDark);
         applyThemes(defaultLight, defaultDark);
@@ -179,10 +175,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      if (!auth || !auth.app) {
-        console.warn("AuthProvider: auth object not initialized, cannot sign out.");
-        throw new Error("Auth service not available.");
-      }
       await auth.signOut();
     } catch (error) {
       console.error("AuthProvider: Error signing out: ", error);
@@ -191,27 +183,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchUserProfile = useCallback(async (uid: string) => {
-    if (authUser && authUser.uid === uid) {
+    if (authUser && authUser.id === uid) {
       await internalFetchAndSetUserProfile(authUser, globalSettings);
-    } else if (authUser && authUser.uid !== uid) {
+    } else if (authUser && authUser.id !== uid) {
       console.warn("AuthProvider: fetchUserProfile called for a UID that doesn't match current authUser.");
     } else {
        console.warn("AuthProvider: fetchUserProfile called without an active authUser.");
     }
   }, [authUser, internalFetchAndSetUserProfile, globalSettings]);
 
-  const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (error) {
-        console.error("Error during Google Sign-In:", error);
-        throw error;
-    }
+  const signIn = async (email: string, password: string) => {
+    await auth.signIn(email, password);
+  };
+
+  const signUp = async (email: string, password: string, name: string) => {
+    await auth.signUp(email, password, name);
   };
 
   return (
-    <AuthContext.Provider value={{ authUser, userProfile, isLoading, permissions, isPermissionsLoading, logout, fetchUserProfile, signInWithGoogle }}>
+    <AuthContext.Provider value={{ authUser, userProfile, isLoading, permissions, isPermissionsLoading, logout, fetchUserProfile, signIn, signUp }}>
       {children}
     </AuthContext.Provider>
   );
