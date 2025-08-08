@@ -1,0 +1,345 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 17% 94%; /* #F0F0F0 with subtle blue tint */
+    --foreground: 20 14.3% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+    --primary: 197 71% 56%; /* #29ABE2 Vibrante Azul */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 24 9.8% 10%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 5.3% 44.1%;
+    --accent: 314 48% 71%; /* #DB92C8 Rosa */
+    --accent-foreground: 20 14.3% 4.1%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 314 48% 71%; /* Changed from primary blue to accent pink */
+    --chart-1: 197 71% 56%; 
+    --chart-2: 314 48% 71%;
+    --chart-3: 120 58% 39%; 
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+
+  /* --- Tema Azul Corporativo --- */
+  :root:not(.dark).theme-azul-corporativo {
+    --background: 216 28% 97%; /* #EFF2F7 -> mapped from #F5F7FA */
+    --foreground: 212 33% 18%; /* #1D2D3C */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 212 33% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 212 33% 18%;
+    --primary: 210 29% 24%; /* #2C3E50 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 93%; /* Mapped from --border-color */
+    --secondary-foreground: 212 33% 18%;
+    --muted: 220 13% 93%;
+    --muted-foreground: 208 14% 54%; /* #7B8B99 */
+    --accent: 207 68% 53%; /* #3498DB */
+    --accent-foreground: 0 0% 100%;
+    --border: 220 13% 93%; /* #EAEBEE */
+    --input: 220 13% 93%;
+    --ring: 207 68% 53%;
+    
+  }
+
+  /* --- Tema Cohesión de Marca --- */
+  :root:not(.dark).theme-cohesion-marca {
+    --background: 260 20% 97%; /* #F4F2F7 */
+    --foreground: 200 15% 18%; /* #263238 */
+    --card: 0 0% 100%;
+    --card-foreground: 200 15% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 15% 18%;
+    --primary: 261 52% 55%; /* #7E57C2 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 17% 89%; /* Mapped from border color */
+    --secondary-foreground: 200 15% 18%;
+    --muted: 200 17% 89%;
+    --muted-foreground: 200 18% 46%; /* #607D8B */
+    --accent: 261 52% 55%; /* #7E57C2 */
+    --accent-foreground: 0 0% 100%;
+    --border: 200 17% 89%; /* #CFD8DC */
+    --input: 200 17% 89%;
+    --ring: 261 52% 55%;
+  }
+
+  .dark {
+    --background: 170 30% 10%;
+    --foreground: 170 15% 90%;
+    --card: 170 28% 15%;
+    --card-foreground: 170 15% 90%;
+    --popover: 170 30% 8%;
+    --popover-foreground: 170 15% 90%;
+    --primary: 170 100% 37%; /* This is the vibrant green from the image */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 170 40% 25%;
+    --secondary-foreground: 170 15% 90%;
+    --muted: 170 40% 20%;
+    --muted-foreground: 170 15% 60%;
+    --accent: 170 100% 37%; /* Same as primary for consistency */
+    --accent-foreground: 0 0% 100%;
+    --border: 170 40% 22%;
+    --input: 170 40% 22%;
+    --ring: 170 100% 37%;
+    --chart-1: 170 100% 37%;
+    --chart-2: 197 71% 56%;
+    --chart-3: 43 74% 66%;
+    --chart-4: 270 90% 65%;
+    --chart-5: 340 90% 65%;
+    --radius: 0.5rem;
+  }
+
+
+  /* --- Dark Theme: Azul Corporativo --- */
+  .dark.theme-azul-corporativo-dark {
+    --background: 212 33% 10%; /* Darker version of foreground */
+    --foreground: 220 13% 93%; /* Lighter shade */
+    --card: 212 33% 14%; /* Slightly lighter than background */
+    --card-foreground: 220 13% 93%;
+    --popover: 212 33% 8%;
+    --popover-foreground: 220 13% 93%;
+    --primary: 207 68% 53%; /* Accent color */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 29% 24%; /* Main color from light theme */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 29% 18%;
+    --muted-foreground: 208 14% 64%;
+    --accent: 207 68% 53%;
+    --accent-foreground: 0 0% 100%;
+    --border: 210 29% 20%;
+    --input: 210 29% 20%;
+    --ring: 207 68% 53%;
+  }
+
+
+  /* --- Dark Theme: Cohesión de Marca --- */
+  .dark.theme-cohesion-marca-dark {
+    --background: 260 15% 12%;
+    --foreground: 260 10% 92%;
+    --card: 260 14% 18%;
+    --card-foreground: 260 10% 92%;
+    --popover: 260 15% 10%;
+    --popover-foreground: 260 10% 92%;
+    --primary: 261 52% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 261 52% 45%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 261 52% 25%;
+    --muted-foreground: 260 10% 65%;
+    --accent: 261 52% 65%;
+    --accent-foreground: 0 0% 100%;
+    --border: 261 52% 28%;
+    --input: 261 52% 28%;
+    --ring: 261 52% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+/* Custom modifier class for react-day-picker */
+@layer components {
+  /* Match Day: Programado */
+  .day-scheduled { @apply !bg-red-200 !text-red-800 dark:!bg-red-800/40 dark:!text-red-200 font-semibold; }
+  .day-scheduled:not(.rdp-day_selected):hover { @apply !bg-red-300/80; }
+  
+  /* Match Day: Finalizado */
+  .day-finalized { @apply !bg-gray-300 !text-gray-600 dark:!bg-gray-700/50 dark:!text-gray-400 font-semibold; }
+  .day-finalized:not(.rdp-day_selected):hover { @apply !bg-gray-400/50; }
+
+  /* Training Day: Active/Future */
+  .day-training-active { @apply !bg-green-200 !text-green-800 dark:!bg-green-800/40 dark:!text-green-200 font-semibold; }
+  .day-training-active:not(.rdp-day_selected):hover { @apply !bg-green-300/80; }
+
+  /* Training Day: Past */
+  .day-training-past { @apply !bg-gray-300 !text-gray-600 dark:!bg-gray-700/50 dark:!text-gray-400; }
+  .day-training-past:not(.rdp-day_selected):hover { @apply !bg-gray-400/50; }
+  
+
+  /* Current Week Highlight */
+  .day-current-week:not([class*="day-scheduled"]):not([class*="day-finalized"]):not([class*="day-training"]):not(.rdp-day_today):not(.rdp-day_selected) {
+    @apply bg-yellow-400/20 dark:bg-yellow-600/20;
+  }
+
+  /* Today's Date */
+  .rdp-day_today:not(.rdp-day_selected) { 
+    @apply !bg-purple-200 dark:!bg-purple-800/50 ring-1 !ring-purple-500 !text-purple-800 dark:!text-purple-200;
+  }
+  
+  /* Ensure event colors take precedence over week highlight */
+  .day-current-week.day-scheduled,
+  .day-current-week.day-finalized,
+  .day-current-week.day-training-active,
+  .day-current-week.day-training-past {
+    position: relative;
+    z-index: 1; /* Bring event day to front */
+  }
+
+  .day-current-week > .rdp-button_reset::before {
+    content: '';
+    @apply absolute inset-0 bg-yellow-400/20 dark:bg-yellow-500/10 rounded-md;
+    z-index: -1; /* Place week highlight behind */
+  }
+
+  /* Selected Day */
+  .rdp-day_selected {
+      @apply ring-2 ring-black dark:ring-white;
+  }
+  
+  /* react-resizable styles */
+  .react-resizable {
+    position: relative;
+  }
+  .react-resizable-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-origin: content-box;
+    box-sizing: border-box;
+    padding: 0 3px 3px 0;
+  }
+  .react-resizable-handle-sw {
+    bottom: 0;
+    left: 0;
+    cursor: sw-resize;
+    transform: rotate(90deg);
+  }
+  .react-resizable-handle-se {
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+  }
+  .react-resizable-handle-nw {
+    top: 0;
+    left: 0;
+    cursor: nw-resize;
+    transform: rotate(180deg);
+  }
+  .react-resizable-handle-ne {
+    top: 0;
+    right: 0;
+    cursor: ne-resize;
+    transform: rotate(270deg);
+  }
+  .react-resizable-handle-w,
+  .react-resizable-handle-e {
+    top: 50%;
+    margin-top: -10px;
+    cursor: ew-resize;
+  }
+  .react-resizable-handle-w {
+    left: 0;
+    transform: rotate(135deg);
+  }
+  .react-resizable-handle-e {
+    right: 0;
+    transform: rotate(315deg);
+  }
+  .react-resizable-handle-n,
+  .react-resizable-handle-s {
+    left: 50%;
+    margin-left: -10px;
+    cursor: ns-resize;
+  }
+  .react-resizable-handle-n {
+    top: 0;
+    transform: rotate(225deg);
+  }
+  .react-resizable-handle-s {
+    bottom: 0;
+    transform: rotate(45deg);
+  }
+}
+
+/* Styles for ModernDialog */
+@layer components {
+    .btn-primary {
+        @apply w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    .btn-secondary {
+        @apply w-full rounded-md bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground shadow-sm transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    .btn-danger {
+        @apply w-full rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground shadow-sm transition-colors hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    .modal-input {
+        @apply block w-full rounded-md border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:ring-primary;
+    }
+    .modal-content img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+}
+
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .no-print, .no-print * {
+    display: none !important;
+  }
+  
+  #player-report-printable,
+  #team-report-printable,
+  #player-report-printable *,
+  #team-report-printable * {
+    visibility: visible;
+  }
+
+  #player-report-printable,
+  #team-report-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    padding: 0; /* Let inner content handle padding */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-scheme: light; /* Force light mode for printing */
+  }
+
+  .printable-content {
+      visibility: visible;
+  }
+  
+  .printable-card, .printable-table, .printable-header, .printable-player-card {
+    break-inside: avoid;
+    background-color: white !important;
+    color: black !important;
+  }
+  
+  .page-break-before {
+    page-break-before: always;
+  }
+}
